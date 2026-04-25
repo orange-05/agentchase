@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentChase - AI Payment Chaser</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            content: [],
+            theme: {
+                extend: {
+                    transitionProperty: { 'all': 'all' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .hero-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e2937 100%);
+        }
+
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: 0 25px 50px -12px rgb(59 130 246 / 0.4);
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+
+<body class="bg-black text-white overflow-x-hidden">
+
+    <!-- Hero -->
+    <section class="hero-bg min-h-screen flex items-center relative">
+        <div class="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
+            <div
+                class="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full mb-8 border border-white/20">
+                <span class="text-green-400">●</span>
+                <span class="text-sm font-medium">Built for Indian Freelancers & Solopreneurs</span>
+            </div>
+
+            <h1 class="text-6xl md:text-7xl font-bold leading-tight mb-6">
+                Never Chase<br>
+                <span class="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Payments
+                    Again</span>
+            </h1>
+
+            <p class="text-xl md:text-2xl text-zinc-400 max-w-3xl mx-auto mb-12">
+                Your personal AI agent that automatically sends smart reminders,<br>
+                tracks payments & helps you get paid faster.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-5 justify-center items-center">
+                <a href="http://localhost:3000"
+                    class="group bg-blue-600 hover:bg-blue-500 px-10 py-5 rounded-3xl text-xl font-semibold flex items-center gap-3 transition-all hover:scale-105">
+                    Start Free Trial
+                    <i class="fa-solid fa-arrow-right group-active:rotate-45 transition"></i>
+                </a>
+                <a href="#features"
+                    class="px-8 py-5 border border-white/30 hover:border-white rounded-3xl text-xl font-medium transition">
+                    Watch Demo
+                </a>
+            </div>
+
+            <div class="mt-12 flex justify-center gap-8 text-sm text-zinc-400">
+                <div class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> No Credit Card
+                </div>
+                <div class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> 14 Days Free</div>
+                <div class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> Cancel Anytime
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trusted -->
+    <div class="py-8 border-b border-white/10 text-center text-zinc-400">
+        <p class="text-sm mb-4">Trusted by freelancers using</p>
+        <div class="flex justify-center gap-12 opacity-75">
+            <span class="text-xl font-semibold">Razorpay</span>
+            <span class="text-xl font-semibold">Payoneer</span>
+            <span class="text-xl font-semibold">Groww</span>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <section id="features" class="py-24 bg-zinc-950">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-5xl font-bold text-center mb-4">Your AI Collection Agent</h2>
+            <p class="text-center text-zinc-400 mb-16">Smart. Polite. Relentless.</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass border border-white/10 rounded-3xl p-10 card-hover">
+                    <div class="h-14 w-14 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 text-3xl">📄
+                    </div>
+                    <h3 class="text-2xl font-semibold mb-3">Instant Invoice Intelligence</h3>
+                    <p class="text-zinc-400">Upload PDF or enter details → AI extracts client, amount, due date
+                        automatically.</p>
+                </div>
+
+                <div class="glass border border-white/10 rounded-3xl p-10 card-hover">
+                    <div class="h-14 w-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 text-3xl">
+                        🤖</div>
+                    <h3 class="text-2xl font-semibold mb-3">Agentic Follow-ups</h3>
+                    <p class="text-zinc-400">AI decides tone (polite → firm) and sends personalized reminders at perfect
+                        timing.</p>
+                </div>
+
+                <div class="glass border border-white/10 rounded-3xl p-10 card-hover">
+                    <div class="h-14 w-14 bg-green-500/10 rounded-2xl flex items-center justify-center mb-6 text-3xl">💰
+                    </div>
+                    <h3 class="text-2xl font-semibold mb-3">Payoneer + Razorpay Ready</h3>
+                    <p class="text-zinc-400">Track payments easily. Withdraw earnings via Payoneer or UPI instantly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="py-24 bg-black" id="pricing">
+        <div class="max-w-5xl mx-auto px-6">
+            <h2 class="text-5xl font-bold text-center mb-4">Choose Your Plan</h2>
+            <p class="text-center text-zinc-400 mb-16">Start free. Grow with confidence.</p>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="glass border border-zinc-700 rounded-3xl p-10 card-hover">
+                    <h3 class="text-2xl font-semibold">Pay-Per-Chase</h3>
+                    <p class="text-6xl font-bold mt-6">₹99</p>
+                    <p class="text-zinc-400">per successful chase</p>
+                    <ul class="mt-10 space-y-4">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-green-500"></i> Unlimited
+                            Invoices</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-green-500"></i> AI
+                            Reminders</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-green-500"></i> Payoneer
+                            Withdrawal</li>
+                    </ul>
+                    <a href="http://localhost:3000"
+                        class="block w-full text-center mt-12 bg-white text-black py-5 rounded-2xl font-semibold text-lg hover:scale-105 transition">
+                        Get Started Free
+                    </a>
+                </div>
+
+                <div class="glass border-2 border-blue-600 rounded-3xl p-10 card-hover relative overflow-hidden">
+                    <div class="absolute -top-3 right-6 bg-blue-600 text-xs px-5 py-1 rounded-full">RECOMMENDED</div>
+                    <h3 class="text-2xl font-semibold">Unlimited Agent</h3>
+                    <p class="text-6xl font-bold mt-6">₹499</p>
+                    <p class="text-zinc-400">/month</p>
+                    <ul class="mt-10 space-y-4">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-green-500"></i> Unlimited
+                            Chases</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-green-500"></i> Priority AI
+                            Agent</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-green-500"></i> Payoneer +
+                            Razorpay</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-green-500"></i> WhatsApp
+                            Reminders (Soon)</li>
+                    </ul>
+                    <a href="http://localhost:3000"
+                        class="block w-full text-center mt-12 bg-blue-600 py-5 rounded-2xl font-semibold text-lg hover:scale-105 transition">
+                        Start 14 Days Free Trial
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-16 text-center text-zinc-500 border-t border-white/10">
+        <p class="text-lg">Made with ❤️ in Bengaluru for Indian creators</p>
+        <p class="mt-2">© 2026 AgentChase • Powered by Grok</p>
+    </footer>
+</body>
+
+</html>

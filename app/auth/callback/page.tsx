@@ -13,7 +13,7 @@ export default function AuthCallback() {
 
       if (error) {
         console.error('Auth error:', error);
-        router.push('/');
+        router.push('/login');
       } else {
         router.push('/dashboard');
       }

@@ -1,13 +1,22 @@
-﻿'use client';
+'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { LogOut, Plus, Send, Upload } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import type { User } from '@supabase/supabase-js';
+
+type Invoice = {
+  id: string;
+  client_name: string;
+  amount: string;
+  due_date: string;
+};
 
 export default function Dashboard() {
-  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     client_name: '',
@@ -17,28 +26,38 @@ export default function Dashboard() {
   });
   const [file, setFile] = useState<File | null>(null);
   const [extracting, setExtracting] = useState(false);
+  const router = useRouter();
+
+  const fetchInvoices = useCallback(async () => {
+    const { data } = await supabase.from('invoices').select('*').order('created_at', { ascending: false });
+    setInvoices((data || []) as Invoice[]);
+  }, []);
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace('/login');
+        return;
+      }
+
       setUser(user);
-      if (user) await fetchInvoices();
+      await fetchInvoices();
       setLoading(false);
     };
-    getUser();
-  }, []);
 
-  const fetchInvoices = async () => {
-    const { data } = await supabase.from('invoices').select('*').order('created_at', { ascending: false });
-    setInvoices(data || []);
-  };
+    getUser();
+  }, [fetchInvoices, router]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFile(e.target.files[0]);
   };
 
   const extractWithAI = async () => {
-    if (!file) return alert("Please upload a file first");
+    if (!file) return alert('Please upload a file first');
 
     setExtracting(true);
     const formDataUpload = new FormData();
@@ -58,20 +77,20 @@ export default function Dashboard() {
           due_date: data.due_date || '',
           client_email: data.client_email || ''
         });
-        alert("✅ AI Extracted details successfully!");
+        alert('✅ AI Extracted details successfully!');
       } else {
-        alert("Could not extract details. Please fill manually.");
+        alert('Could not extract details. Please fill manually.');
       }
-    } catch (err) {
-      alert("Extraction failed. Please fill manually.");
+    } catch {
+      alert('Extraction failed. Please fill manually.');
     } finally {
       setExtracting(false);
     }
   };
 
   const saveInvoice = async () => {
-    if (!formData.client_name || !formData.amount) {
-      return alert("Client name and amount are required");
+    if (!formData.client_name || !formData.amount || !user) {
+      return alert('Client name and amount are required');
     }
 
     const { error } = await supabase.from('invoices').insert({
@@ -80,9 +99,9 @@ export default function Dashboard() {
       status: 'pending'
     });
 
-    if (error) alert("Error saving invoice");
+    if (error) alert('Error saving invoice');
     else {
-      alert("✅ Invoice saved successfully!");
+      alert('✅ Invoice saved successfully!');
       setShowModal(false);
       setFormData({ client_name: '', amount: '', due_date: '', client_email: '' });
       fetchInvoices();
@@ -90,10 +109,10 @@ export default function Dashboard() {
   };
 
   const chaseNow = async (invoiceId: string) => {
-    if (!confirm("Send AI chase email?")) return;
-    const res = await fetch('/api/chase', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ invoiceId }) });
+    if (!confirm('Send AI chase email?')) return;
+    const res = await fetch('/api/chase', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invoiceId }) });
     const data = await res.json();
-    alert(data.success ? "✅ Chase email sent!" : "Error: " + data.error);
+    alert(data.success ? '✅ Chase email sent!' : `Error: ${data.error}`);
   };
 
   if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
@@ -106,7 +125,13 @@ export default function Dashboard() {
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">💰</div>
             <h1 className="text-4xl font-bold">AgentChase</h1>
           </div>
-          <button onClick={() => supabase.auth.signOut()} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl">
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push('/login');
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl"
+          >
             <LogOut size={18} /> Logout
           </button>
         </div>
@@ -139,7 +164,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* AI New Invoice Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-zinc-900 rounded-3xl p-8 w-full max-w-lg">
@@ -154,10 +178,10 @@ export default function Dashboard() {
             </div>
 
             <div className="space-y-4">
-              <input type="text" placeholder="Client Name" value={formData.client_name} onChange={(e) => setFormData({...formData, client_name: e.target.value})} className="w-full bg-zinc-800 rounded-2xl p-4" />
-              <input type="number" placeholder="Amount (₹)" value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} className="w-full bg-zinc-800 rounded-2xl p-4" />
-              <input type="date" value={formData.due_date} onChange={(e) => setFormData({...formData, due_date: e.target.value})} className="w-full bg-zinc-800 rounded-2xl p-4" />
-              <input type="email" placeholder="Client Email" value={formData.client_email} onChange={(e) => setFormData({...formData, client_email: e.target.value})} className="w-full bg-zinc-800 rounded-2xl p-4" />
+              <input type="text" placeholder="Client Name" value={formData.client_name} onChange={(e) => setFormData({ ...formData, client_name: e.target.value })} className="w-full bg-zinc-800 rounded-2xl p-4" />
+              <input type="number" placeholder="Amount (₹)" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} className="w-full bg-zinc-800 rounded-2xl p-4" />
+              <input type="date" value={formData.due_date} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })} className="w-full bg-zinc-800 rounded-2xl p-4" />
+              <input type="email" placeholder="Client Email" value={formData.client_email} onChange={(e) => setFormData({ ...formData, client_email: e.target.value })} className="w-full bg-zinc-800 rounded-2xl p-4" />
             </div>
 
             <div className="flex gap-3 mt-8">

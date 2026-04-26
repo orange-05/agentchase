@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AgentChase
 
-## Getting Started
+AgentChase is a Next.js app for invoice reminders and payment follow-ups.
 
-First, run the development server:
+## App flow
+
+1. `/` → Landing page
+2. `/login` → Authentication
+3. `/dashboard` → Main app after login
+
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create `.env.local` with:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+GEMINI_API_KEY=
+RESEND_API_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+> Never commit real API keys to git. If keys are shared publicly, rotate them immediately.
 
-## Learn More
+## Deploy to Netlify
 
-To learn more about Next.js, take a look at the following resources:
+1. Push this repository to GitHub/GitLab/Bitbucket.
+2. In Netlify, choose **Add new site** → **Import an existing project**.
+3. Select this repository.
+4. Build settings:
+   - **Build command:** `npm run build`
+   - **Publish directory:** leave default for Next.js (Netlify runtime handles it)
+5. Add environment variables in Netlify site settings:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `GEMINI_API_KEY`
+   - `RESEND_API_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+6. In Supabase Auth settings, add your Netlify callback URL:
+   - `https://<your-netlify-site>.netlify.app/auth/callback`
+7. Deploy.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`netlify.toml` already includes the Netlify Next.js runtime plugin.

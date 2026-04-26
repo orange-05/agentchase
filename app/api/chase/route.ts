@@ -40,6 +40,13 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Invoice not found in database' }, { status: 404 });
     }
 
+ codex/deploy-project-to-netlify-with-landing-page-qbktyk
+    if (!invoice.client_email) {
+      return Response.json({ error: 'Client email is missing for this invoice' }, { status: 400 });
+    }
+
+=======
+ main
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
     const prompt = `Write a short friendly payment reminder for this invoice:

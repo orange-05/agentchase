@@ -1,32 +1,78 @@
-﻿import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+type InvoiceExtraction = {
+  client_name: string;
+  amount: string;
+  due_date: string;
+  client_email: string;
+};
+
+function getRequiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required env var: ${name}`);
+  }
+
+  return value;
+}
+
+function toBase64(buffer: ArrayBuffer): string {
+  return Buffer.from(buffer).toString('base64');
+}
+
+function extractJsonObject(text: string): InvoiceExtraction {
+  const cleaned = text.replace(/```json|```/g, '').trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error('AI did not return valid JSON');
+  }
+
+  const parsed = JSON.parse(cleaned.slice(start, end + 1)) as Partial<InvoiceExtraction>;
+
+  return {
+    client_name: parsed.client_name ?? '',
+    amount: parsed.amount ? String(parsed.amount) : '',
+    due_date: parsed.due_date ?? '',
+    client_email: parsed.client_email ?? '',
+  };
+}
 
 export async function POST(req: Request) {
   try {
-    const { imageUrl } = await req.json();
+    const formData = await req.formData();
+    const file = formData.get('file');
 
-    if (!imageUrl) {
-      return Response.json({ error: 'Image URL is required' }, { status: 400 });
+    if (!(file instanceof File)) {
+      return Response.json({ error: 'Invoice file is required' }, { status: 400 });
     }
 
+    const bytes = await file.arrayBuffer();
+    const genAI = new GoogleGenerativeAI(getRequiredEnv('GEMINI_API_KEY'));
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
-    const prompt = 'You are an expert invoice extractor. Extract ONLY these fields from the invoice PDF/image as valid JSON: {"client_name": "string", "amount": number, "due_date": "YYYY-MM-DD", "client_email": "string or null"}. If field is missing, use null or empty string.';
+    const prompt =
+      'Extract ONLY this JSON from the provided invoice: {"client_name":"","amount":"","due_date":"YYYY-MM-DD","client_email":""}. Use empty strings when unavailable. Respond with JSON only.';
 
     const result = await model.generateContent([
-      prompt,
-      { fileData: { fileUri: imageUrl, mimeType: 'application/pdf' } }
+      { text: prompt },
+      {
+        inlineData: {
+          data: toBase64(bytes),
+          mimeType: file.type || 'application/pdf',
+        },
+      },
     ]);
 
-    const text = result.response.text().replace(/`json|`/g, '').trim();
-    const parsed = JSON.parse(text);
-
+    const parsed = extractJsonObject(result.response.text());
     return Response.json(parsed);
-  } catch (error: any) {
-    console.error('Extraction error:', error);
-    return Response.json({ 
-      error: 'Failed to extract invoice details. Please enter manually.' 
-    }, { status: 500 });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Failed to extract invoice details. Please enter manually.';
+
+    return Response.json({ error: message }, { status: 500 });
   }
 }

@@ -55,7 +55,19 @@ export default function Login() {
             disabled={loading}
             className="w-full flex items-center justify-center gap-3 bg-white text-black py-4 rounded-2xl font-medium hover:bg-gray-100 mb-4"
           >
+ codex/deploy-project-to-netlify-with-landing-page-det6un
             <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold">G</span>
+=======
+ codex/deploy-project-to-netlify-with-landing-page-ruwyj5
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold">G</span>
+=======
+ codex/deploy-project-to-netlify-with-landing-page-qbktyk
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold">G</span>
+=======
+            <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
+ main
+ main
+ main
             Sign in with Google
           </button>
 

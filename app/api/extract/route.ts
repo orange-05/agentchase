@@ -1,14 +1,20 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+ codex/deploy-project-to-netlify-with-landing-page-ruwyj5
+=======
  codex/deploy-project-to-netlify-with-landing-page-qbktyk
+ main
 type InvoiceExtraction = {
   client_name: string;
   amount: string;
   due_date: string;
   client_email: string;
+ codex/deploy-project-to-netlify-with-landing-page-ruwyj5
+=======
 =======
 type ExtractPayload = {
   imageUrl?: string;
+ main
  main
 };
 
@@ -20,7 +26,10 @@ function getRequiredEnv(name: string): string {
 
   return value;
 }
+ codex/deploy-project-to-netlify-with-landing-page-ruwyj5
+=======
  codex/deploy-project-to-netlify-with-landing-page-qbktyk
+ main
 
 function toBase64(buffer: ArrayBuffer): string {
   return Buffer.from(buffer).toString('base64');
@@ -44,6 +53,13 @@ function extractJsonObject(text: string): InvoiceExtraction {
     client_email: parsed.client_email ?? '',
   };
 }
+ codex/deploy-project-to-netlify-with-landing-page-ruwyj5
+
+export async function POST(req: Request) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get('file');
+=======
 
 export async function POST(req: Request) {
   try {
@@ -55,19 +71,36 @@ export async function POST(req: Request) {
   try {
     const { imageUrl }: ExtractPayload = await req.json();
  main
+ main
 
     if (!(file instanceof File)) {
       return Response.json({ error: 'Invoice file is required' }, { status: 400 });
     }
 
+ codex/deploy-project-to-netlify-with-landing-page-ruwyj5
+    const bytes = await file.arrayBuffer();
+=======
  codex/deploy-project-to-netlify-with-landing-page-qbktyk
     const bytes = await file.arrayBuffer();
 =======
+ main
  main
     const genAI = new GoogleGenerativeAI(getRequiredEnv('GEMINI_API_KEY'));
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
     const prompt =
+ codex/deploy-project-to-netlify-with-landing-page-ruwyj5
+      'Extract ONLY this JSON from the provided invoice: {"client_name":"","amount":"","due_date":"YYYY-MM-DD","client_email":""}. Use empty strings when unavailable. Respond with JSON only.';
+
+    const result = await model.generateContent([
+      { text: prompt },
+      {
+        inlineData: {
+          data: toBase64(bytes),
+          mimeType: file.type || 'application/pdf',
+        },
+      },
+=======
  codex/deploy-project-to-netlify-with-landing-page-qbktyk
       'Extract ONLY this JSON from the provided invoice: {"client_name":"","amount":"","due_date":"YYYY-MM-DD","client_email":""}. Use empty strings when unavailable. Respond with JSON only.';
 
@@ -85,6 +118,7 @@ export async function POST(req: Request) {
     const result = await model.generateContent([
       prompt,
       { fileData: { fileUri: imageUrl, mimeType: 'application/pdf' } },
+ main
  main
     ]);
 

@@ -1,4 +1,4 @@
-﻿import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     // AI Agent Logic
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `Write a short friendly payment reminder for this invoice:
 Client: ${invoice.client_name}

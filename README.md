@@ -15,6 +15,10 @@ npm install
 npm run dev
 ```
 
+ codex/deploy-project-to-netlify-with-landing-page-ruwyj5
+=======
+ codex/deploy-project-to-netlify-with-landing-page-qbktyk
+ main
 Create `.env.local` with:
 
 ```bash
@@ -27,6 +31,11 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 > Never commit real API keys to git. If keys are shared publicly, rotate them immediately.
 
+ codex/deploy-project-to-netlify-with-landing-page-ruwyj5
+=======
+=======
+ main
+ main
 ## Deploy to Netlify
 
 1. Push this repository to GitHub/GitLab/Bitbucket.
@@ -38,9 +47,18 @@ SUPABASE_SERVICE_ROLE_KEY=
 5. Add environment variables in Netlify site settings:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+ codex/deploy-project-to-netlify-with-landing-page-ruwyj5
    - `GEMINI_API_KEY`
    - `RESEND_API_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+=======
+ codex/deploy-project-to-netlify-with-landing-page-qbktyk
+   - `GEMINI_API_KEY`
+   - `RESEND_API_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+=======
+ main
+ main
 6. In Supabase Auth settings, add your Netlify callback URL:
    - `https://<your-netlify-site>.netlify.app/auth/callback`
 7. Deploy.

@@ -18,12 +18,13 @@ export default function Login() {
 
   const signInWithGoogle = async () => {
     setLoading(true);
-    const redirectTo =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/auth/callback`
-        : process.env.NEXT_PUBLIC_SITE_URL
-          ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-          : 'http://localhost:3000/auth/callback';
+    // Always use the canonical site URL so Supabase redirects to the correct host.
+    // NEXT_PUBLIC_SITE_URL must be set in Netlify env vars AND whitelisted in
+    // Supabase Dashboard → Authentication → URL Configuration → Redirect URLs.
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+    const redirectTo = `${siteUrl}/auth/callback`;
 
     await supabase.auth.signInWithOAuth({
       provider: 'google',

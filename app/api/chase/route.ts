@@ -1,24 +1,34 @@
-﻿import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const resend = new Resend(process.env.RESEND_API_KEY!);
+type ChasePayload = {
+  invoiceId?: string;
+};
 
-const supabaseService = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getRequiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required env var: ${name}`);
+  }
+
+  return value;
+}
 
 export async function POST(req: Request) {
   try {
-    const { invoiceId } = await req.json();
+    const { invoiceId }: ChasePayload = await req.json();
 
     if (!invoiceId) {
-      return Response.json({ error: "No invoice ID provided" }, { status: 400 });
+      return Response.json({ error: 'No invoice ID provided' }, { status: 400 });
     }
 
-    console.log("Looking for invoice:", invoiceId);
+    const genAI = new GoogleGenerativeAI(getRequiredEnv('GEMINI_API_KEY'));
+    const resend = new Resend(getRequiredEnv('RESEND_API_KEY'));
+    const supabaseService = createClient(
+      getRequiredEnv('NEXT_PUBLIC_SUPABASE_URL'),
+      getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
+    );
 
     const { data: invoice, error } = await supabaseService
       .from('invoices')
@@ -27,12 +37,10 @@ export async function POST(req: Request) {
       .single();
 
     if (error || !invoice) {
-      console.error("Invoice fetch error:", error);
-      return Response.json({ error: "Invoice not found in database" }, { status: 404 });
+      return Response.json({ error: 'Invoice not found in database' }, { status: 404 });
     }
 
-    // AI Agent Logic
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
     const prompt = `Write a short friendly payment reminder for this invoice:
 Client: ${invoice.client_name}
@@ -43,9 +51,8 @@ Return ONLY JSON: {"subject": "...", "body": "..."}`;
 
     const result = await model.generateContent(prompt);
     const text = result.response.text().replace(/```json|```/g, '').trim();
-    const aiMessage = JSON.parse(text);
+    const aiMessage = JSON.parse(text) as { subject: string; body: string };
 
-    // Send Email
     await resend.emails.send({
       from: 'AgentChase <hello@resend.dev>',
       to: invoice.client_email,
@@ -53,20 +60,18 @@ Return ONLY JSON: {"subject": "...", "body": "..."}`;
       html: aiMessage.body,
     });
 
-    // Log it
     await supabaseService.from('chase_logs').insert({
       invoice_id: invoiceId,
       user_id: invoice.user_id,
       message_type: 'email',
       subject: aiMessage.subject,
       content: aiMessage.body,
-      status: 'sent'
+      status: 'sent',
     });
 
-    return Response.json({ success: true, message: "✅ AI Agent sent the chase email!" });
-
-  } catch (err: any) {
-    console.error("Chase Error:", err);
-    return Response.json({ error: err.message }, { status: 500 });
+    return Response.json({ success: true, message: '✅ AI Agent sent the chase email!' });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown server error';
+    return Response.json({ error: message }, { status: 500 });
   }
 }

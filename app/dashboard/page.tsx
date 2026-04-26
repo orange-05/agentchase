@@ -11,6 +11,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [formData, setFormData] = useState({
     client_name: '',
     amount: '',
@@ -100,19 +101,33 @@ export default function Dashboard() {
     }
   };
 
-  const chaseNow = async (invoiceId: string) => {
-    if (!confirm('Send AI chase email?')) return;
-    setChasing(invoiceId);
+  const showToast = (msg: string, ok: boolean) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 6000);
+  };
+
+  const chaseNow = async (inv: any) => {
+    // Pre-flight: check email before even calling API
+    if (!inv.client_email || !inv.client_email.includes('@')) {
+      showToast(`❌ No email for "${inv.client_name}". Edit the invoice and add a client email first.`, false);
+      return;
+    }
+    if (!confirm(`Send AI chase email to ${inv.client_email}?`)) return;
+    setChasing(inv.id);
     try {
       const res = await fetch('/api/chase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invoiceId })
+        body: JSON.stringify({ invoiceId: inv.id })
       });
       const data = await res.json();
-      alert(data.success ? '✅ Chase email sent!' : 'Error: ' + (data.error || 'Unknown error'));
-    } catch {
-      alert('Failed to send chase email. Please try again.');
+      if (data.success) {
+        showToast(data.message || '✅ Chase email sent!', true);
+      } else {
+        showToast('❌ ' + (data.error || 'Unknown error'), false);
+      }
+    } catch (e: any) {
+      showToast('❌ Network error — please check your connection.', false);
     } finally {
       setChasing(null);
     }
@@ -136,6 +151,16 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white p-8">
+      {/* Toast notification */}
+      {toast && (
+        <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl max-w-lg w-full text-sm font-medium transition-all ${
+          toast.ok ? 'bg-emerald-900 border border-emerald-600 text-emerald-100' : 'bg-red-950 border border-red-600 text-red-100'
+        }`}>
+          <span className="text-lg">{toast.ok ? '✅' : '❌'}</span>
+          <span className="flex-1">{toast.msg}</span>
+          <button onClick={() => setToast(null)} className="text-white/50 hover:text-white ml-2 text-lg leading-none">×</button>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-10">
@@ -196,33 +221,49 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="grid gap-4">
-              {invoices.map((inv) => (
-                <div key={inv.id} className="bg-zinc-800 p-6 rounded-2xl flex justify-between items-center gap-4">
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{inv.client_name}</p>
-                    <p className="text-sm text-zinc-400 mt-1">
-                      ₹{Number(inv.amount).toLocaleString('en-IN')}
-                      {inv.due_date && ` • Due ${inv.due_date}`}
-                      {inv.client_email && ` • ${inv.client_email}`}
-                    </p>
-                    <span className={`inline-block mt-2 text-xs px-2 py-1 rounded-full ${
-                      inv.status === 'paid'
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-yellow-500/20 text-yellow-400'
-                    }`}>
-                      {inv.status}
-                    </span>
+              {invoices.map((inv) => {
+                const hasEmail = inv.client_email && inv.client_email.includes('@');
+                return (
+                  <div key={inv.id} className="bg-zinc-800 p-6 rounded-2xl flex justify-between items-center gap-4">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{inv.client_name}</p>
+                      <p className="text-sm text-zinc-400 mt-1">
+                        ₹{Number(inv.amount).toLocaleString('en-IN')}
+                        {inv.due_date && ` • Due ${inv.due_date}`}
+                        {inv.client_email
+                          ? <span className="text-zinc-400"> • {inv.client_email}</span>
+                          : <span className="text-red-400"> • ⚠️ No email</span>
+                        }
+                      </p>
+                      <span className={`inline-block mt-2 text-xs px-2 py-1 rounded-full ${
+                        inv.status === 'paid'
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {inv.status}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <button
+                        onClick={() => chaseNow(inv)}
+                        disabled={chasing === inv.id}
+                        title={!hasEmail ? 'Add client email first' : 'Send AI chase email'}
+                        className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm transition-colors disabled:opacity-60 whitespace-nowrap ${
+                          hasEmail
+                            ? 'bg-emerald-600 hover:bg-emerald-500'
+                            : 'bg-zinc-600 cursor-not-allowed'
+                        }`}
+                      >
+                        <Send size={16} />
+                        {chasing === inv.id ? 'Sending...' : 'Chase Now'}
+                      </button>
+                      {!hasEmail && (
+                        <span className="text-xs text-red-400">Add email to chase</span>
+                      )}
+                    </div>
                   </div>
-                  <button
-                    onClick={() => chaseNow(inv.id)}
-                    disabled={chasing === inv.id}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-xl text-sm transition-colors disabled:opacity-60 whitespace-nowrap"
-                  >
-                    <Send size={16} />
-                    {chasing === inv.id ? 'Sending...' : 'Chase Now'}
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

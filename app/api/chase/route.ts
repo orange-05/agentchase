@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     }
 
     // ── Generate AI message ──────────────────────────────────────────────────
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     const prompt = `Write a short, professional but friendly payment reminder email for this invoice.
 Client: ${invoice.client_name}

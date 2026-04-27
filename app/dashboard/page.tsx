@@ -30,26 +30,43 @@ export default function Dashboard() {
         return;
       }
       setUser(user);
-      await fetchInvoices();
+      await fetchInvoices(user.id);
       setLoading(false);
     };
     getUser();
   }, [router]);
 
-  const fetchInvoices = async () => {
+  // Always filter by user_id — required for Supabase RLS policies
+  const fetchInvoices = async (userId?: string) => {
+    const id = userId || user?.id;
+    if (!id) return;
     const { data, error } = await supabase
       .from('invoices')
       .select('*')
+      .eq('user_id', id)
       .order('created_at', { ascending: false });
-    if (!error) setInvoices(data || []);
+    if (error) {
+      console.error('fetchInvoices error:', error.message);
+    } else {
+      setInvoices(data || []);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) setFile(e.target.files[0]);
   };
 
+  // Defined early so all handlers below can call it
+  const showToast = (msg: string, ok: boolean) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 6000);
+  };
+
   const extractWithAI = async () => {
-    if (!file) return alert('Please upload a file first');
+    if (!file) {
+      showToast('Please upload a file first', false);
+      return;
+    }
 
     setExtracting(true);
     const body = new FormData();
@@ -59,19 +76,19 @@ export default function Dashboard() {
       const res = await fetch('/api/extract', { method: 'POST', body });
       const data = await res.json();
 
-      if (data.client_name || data.amount) {
+      if (res.ok && (data.client_name || data.amount)) {
         setFormData({
           client_name: data.client_name || '',
-          amount: String(data.amount || ''),
+          amount: data.amount ? String(data.amount) : '',
           due_date: data.due_date || '',
           client_email: data.client_email || ''
         });
-        alert('✅ AI Extracted details successfully!');
+        showToast('✅ AI extracted invoice details successfully!', true);
       } else {
-        alert(data.error || 'Could not extract details. Please fill manually.');
+        showToast(data.error || 'Could not extract details — please fill in manually.', false);
       }
     } catch {
-      alert('Extraction failed. Please fill manually.');
+      showToast('❌ Extraction request failed. Please fill in manually.', false);
     } finally {
       setExtracting(false);
     }
@@ -79,32 +96,38 @@ export default function Dashboard() {
 
   const saveInvoice = async () => {
     if (!formData.client_name || !formData.amount) {
-      return alert('Client name and amount are required');
+      showToast('❌ Client name and amount are required', false);
+      return;
     }
-    if (!user) return alert('Not authenticated');
+    if (!user) {
+      showToast('❌ Not authenticated — please sign in again', false);
+      return;
+    }
 
-    const { error } = await supabase.from('invoices').insert({
-      ...formData,
+    const insertPayload: Record<string, any> = {
+      client_name: formData.client_name.trim(),
       amount: Number(formData.amount),
       user_id: user.id,
-      status: 'pending'
-    });
+      status: 'pending',
+    };
+    // Only include optional fields if they have values (avoids schema mismatches)
+    if (formData.due_date) insertPayload.due_date = formData.due_date;
+    if (formData.client_email) insertPayload.client_email = formData.client_email.trim();
+
+    const { error } = await supabase.from('invoices').insert(insertPayload);
 
     if (error) {
-      alert('Error saving invoice: ' + error.message);
+      console.error('Invoice insert error:', error);
+      showToast('❌ Save failed: ' + error.message, false);
     } else {
-      alert('✅ Invoice saved successfully!');
+      showToast('✅ Invoice saved successfully!', true);
       setShowModal(false);
       setFormData({ client_name: '', amount: '', due_date: '', client_email: '' });
       setFile(null);
-      await fetchInvoices();
+      await fetchInvoices(user.id);
     }
   };
 
-  const showToast = (msg: string, ok: boolean) => {
-    setToast({ msg, ok });
-    setTimeout(() => setToast(null), 6000);
-  };
 
   const chaseNow = async (inv: any) => {
     // Pre-flight: check email before even calling API

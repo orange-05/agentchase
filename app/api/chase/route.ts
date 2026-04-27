@@ -53,10 +53,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // ── Generate AI message ──────────────────────────────────────────────────
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    // ── Generate AI message (with fallback if quota exceeded) ───────────────
+    let aiMessage: { subject: string; body: string };
 
-    const prompt = `Write a short, professional but friendly payment reminder email for this invoice.
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+      const prompt = `Write a short, professional but friendly payment reminder email for this invoice.
 Client: ${invoice.client_name}
 Amount: ₹${invoice.amount}
 Due Date: ${invoice.due_date || 'as agreed'}
@@ -66,24 +69,24 @@ Return ONLY valid JSON (no markdown, no extra text):
 
 The body should be plain text, 3-4 sentences max, polite but firm.`;
 
-    const result = await model.generateContent(prompt);
-    const rawText = result.response.text().trim();
+      const result = await model.generateContent(prompt);
+      const rawText = result.response.text().trim();
 
-    // Strip markdown code fences if present
-    const cleanText = rawText
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/```\s*$/i, '')
-      .trim();
+      // Strip markdown code fences if present
+      const cleanText = rawText
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/```\s*$/i, '')
+        .trim();
 
-    let aiMessage: { subject: string; body: string };
-    try {
       aiMessage = JSON.parse(cleanText);
-    } catch {
-      // Fallback message if AI response is malformed
+    } catch (aiErr: any) {
+      // Fallback to a professional template when AI is unavailable (quota, network, parse error)
+      console.warn('AI generation failed, using template fallback:', aiErr?.message);
+      const duePart = invoice.due_date ? ` was due on ${invoice.due_date}` : ' is now due';
       aiMessage = {
         subject: `Payment Reminder — ₹${invoice.amount} Due`,
-        body: `Hi ${invoice.client_name},\n\nThis is a friendly reminder that your payment of ₹${invoice.amount}${invoice.due_date ? ` was due on ${invoice.due_date}` : ' is now due'}.\n\nPlease arrange the payment at your earliest convenience.\n\nThank you!`
+        body: `Hi ${invoice.client_name},\n\nI hope this message finds you well. This is a friendly reminder that your payment of ₹${invoice.amount}${duePart}.\n\nCould you please arrange the payment at your earliest convenience? If you've already sent it, please disregard this message.\n\nThank you for your prompt attention to this matter!\n\nBest regards`
       };
     }
 

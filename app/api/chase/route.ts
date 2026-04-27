@@ -91,22 +91,67 @@ The body should be plain text, 3-4 sentences max, polite but firm.`;
     }
 
     // ── Send email via Resend ────────────────────────────────────────────────
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: 'AgentChase <onboarding@resend.dev>',
-      to: invoice.client_email,
-      subject: aiMessage.subject,
-      html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px">
+    const emailHtml = `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px">
         <h2 style="color:#1d4ed8">AgentChase Payment Reminder</h2>
         <div style="white-space:pre-line;color:#333;line-height:1.6">${aiMessage.body}</div>
         <hr style="margin:24px 0;border-color:#eee">
         <p style="color:#999;font-size:12px">Sent by AgentChase • AI-powered payment reminders</p>
-      </div>`
+      </div>`;
+
+    const { data: emailData, error: emailError } = await resend.emails.send({
+      from: 'AgentChase <onboarding@resend.dev>',
+      to: invoice.client_email,
+      subject: aiMessage.subject,
+      html: emailHtml
     });
 
+    // If Resend free tier blocks sending to unverified emails, retry to the user's own email
     if (emailError) {
-      console.error('Resend error:', emailError);
+      console.warn('Resend direct send failed:', emailError.message);
+
+      // Get the user's own email from Supabase auth
+      const { data: userData } = await supabaseService.auth.admin.getUserById(invoice.user_id);
+      const userEmail = userData?.user?.email;
+
+      if (userEmail) {
+        const { data: retryData, error: retryError } = await resend.emails.send({
+          from: 'AgentChase <onboarding@resend.dev>',
+          to: userEmail,
+          subject: `[Forward to ${invoice.client_name}] ${aiMessage.subject}`,
+          html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px">
+            <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#92400e">
+              <strong>📋 Resend Free Tier:</strong> This email was intended for <strong>${invoice.client_email}</strong> but was delivered to you instead. Please forward it to your client, or <a href="https://resend.com/domains" style="color:#1d4ed8">verify a custom domain</a> to send directly.
+            </div>
+            ${emailHtml}
+          </div>`
+        });
+
+        if (retryError) {
+          console.error('Resend retry also failed:', retryError.message);
+          return Response.json(
+            { error: `Email delivery failed. Please verify your email at resend.com/audiences or add a custom domain at resend.com/domains.` },
+            { status: 500 }
+          );
+        }
+
+        // Log and return success with forwarding note
+        await supabaseService.from('chase_logs').insert({
+          invoice_id: invoiceId, user_id: invoice.user_id,
+          message_type: 'email', subject: aiMessage.subject,
+          content: aiMessage.body, status: 'sent_to_self'
+        }).then(({ error }) => {
+          if (error) console.warn('Chase log insert failed (non-critical):', error.message);
+        });
+
+        return Response.json({
+          success: true,
+          message: `✅ Chase email sent to your inbox (${userEmail}). Forward it to ${invoice.client_email}. Tip: Add a custom domain on Resend to send directly to clients.`,
+          emailId: retryData?.id
+        });
+      }
+
       return Response.json(
-        { error: `Email failed: ${emailError.message}. Note: Resend free tier can only send to verified emails. Verify your email at resend.com/audiences.` },
+        { error: `Email failed: Resend free tier can only send to verified emails. Verify your domain at resend.com/domains.` },
         { status: 500 }
       );
     }

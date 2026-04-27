@@ -448,9 +448,9 @@ export default function LandingPage() {
       <div className="trusted-bar">
         <p style={{ fontSize: '0.8rem', marginBottom: '16px' }}>Trusted by freelancers using</p>
         <div className="trusted-logos">
-          <span>Razorpay</span>
           <span>Payoneer</span>
-          <span>Groww</span>
+          <span>UPI</span>
+          <span>Google Pay</span>
         </div>
       </div>
 
@@ -474,7 +474,7 @@ export default function LandingPage() {
             </div>
             <div className="feature-card card-hover">
               <div className="feature-icon" style={{ background: 'rgba(34,197,94,0.12)' }}>💰</div>
-              <h3>Payoneer + Razorpay Ready</h3>
+              <h3>Payoneer & UPI Ready</h3>
               <p>Track payments easily. Withdraw earnings via Payoneer or UPI instantly.</p>
             </div>
           </div>
@@ -509,7 +509,7 @@ export default function LandingPage() {
               <ul className="pricing-features">
                 <li><span className="check-green">✓</span> Unlimited Chases</li>
                 <li><span className="check-green">✓</span> Priority AI Agent</li>
-                <li><span className="check-green">✓</span> Payoneer + Razorpay</li>
+                <li><span className="check-green">✓</span> Payoneer + UPI</li>
                 <li><span className="check-green">✓</span> WhatsApp Reminders (Soon)</li>
               </ul>
               <Link href="/login" className="btn-plan blue">Start 14 Days Free Trial</Link>

@@ -12,7 +12,7 @@ export default function Login() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.push('/dashboard');
+      if (session) router.push('/payment');
     });
   }, [router]);
 
@@ -41,7 +41,7 @@ export default function Login() {
       alert(error.message);
       setLoading(false);
     } else {
-      router.push('/dashboard');
+      router.push('/payment');
     }
   };
 

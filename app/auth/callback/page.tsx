@@ -23,8 +23,8 @@ export default function AuthCallback() {
         }
 
         if (session) {
-          setStatus('Login successful! Redirecting to dashboard...');
-          router.replace('/dashboard');
+          setStatus('Login successful! Redirecting...');
+          router.replace('/payment');
         } else {
           // No session yet — try exchanging the code if present in URL params
           const params = new URLSearchParams(window.location.search);
@@ -37,7 +37,7 @@ export default function AuthCallback() {
               setStatus('Login failed. Redirecting...');
               setTimeout(() => router.replace('/login'), 1500);
             } else {
-              router.replace('/dashboard');
+              router.replace('/payment');
             }
           } else {
             setStatus('No session found. Redirecting...');

@@ -29,6 +29,20 @@ export default function Dashboard() {
         router.replace('/login');
         return;
       }
+
+      // Check for active subscription before granting dashboard access
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (!sub) {
+        router.replace('/payment');
+        return;
+      }
+
       setUser(user);
       await fetchInvoices(user.id);
       setLoading(false);

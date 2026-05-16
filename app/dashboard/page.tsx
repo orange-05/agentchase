@@ -176,6 +176,27 @@ export default function Dashboard() {
   };
 
   if (loading) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
+          <div className="max-w-md w-full bg-zinc-900 border border-red-500/20 rounded-3xl p-8 text-center">
+            <div className="text-5xl mb-6">⚙️</div>
+            <h2 className="text-2xl font-bold mb-4">Configuration Required</h2>
+            <p className="text-zinc-400 mb-6 leading-relaxed">
+              The dashboard cannot load because the <strong>Supabase Environment Variables</strong> are not configured in your hosting provider (Netlify).
+            </p>
+            <div className="text-sm text-left bg-black/50 rounded-xl p-4 mb-6 font-mono text-zinc-500">
+              NEXT_PUBLIC_SUPABASE_URL<br/>
+              NEXT_PUBLIC_SUPABASE_ANON_KEY
+            </div>
+            <p className="text-xs text-zinc-500 italic">
+              Add these variables to your project settings to enable the dashboard.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">

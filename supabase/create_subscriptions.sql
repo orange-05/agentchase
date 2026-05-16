@@ -35,3 +35,6 @@ CREATE POLICY "Users can create own trial"
 -- Index for fast lookups
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_status
   ON subscriptions(user_id, status);
+
+-- Reload the PostgREST schema cache so the API recognizes the new table
+NOTIFY pgrst, 'reload schema';

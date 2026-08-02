@@ -3,8 +3,6 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
-![Last Commit](https://img.shields.io/github/last-commit/orange-05/agentchase?style=for-the-badge)
-![Repo Size](https://img.shields.io/github/repo-size/orange-05/agentchase?style=for-the-badge)
 
 > **AI Agent Management Platform** -- Build, deploy, and monitor AI agents with a visual interface.
 
